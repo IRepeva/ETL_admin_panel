@@ -17,6 +17,7 @@ RUN pip install -r requirements.txt --no-cache-dir
 
 COPY ./app /app
 COPY ./etl /etl
+COPY ./utils /utils
 
 #USER app_user
 

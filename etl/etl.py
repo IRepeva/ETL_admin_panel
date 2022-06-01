@@ -40,10 +40,10 @@ def transfer_data():
             data_for_es = [dict(zip(columns, item)) for item in data]
             loader.load(data_for_es)
 
-        state.set_state(DataExtractor.LAST_EXTRACTED_KEY,
-                        state.get_state(DataExtractor.CURRENT_TIME_KEY))
+    state.set_state(DataExtractor.LAST_EXTRACTED_KEY,
+                    state.get_state(DataExtractor.CURRENT_TIME_KEY))
 
-        logger.info(f'All data was successfully transferred to elasticsearch')
+    logger.info(f'All data was successfully transferred to elasticsearch')
 
 
 if __name__ == '__main__':

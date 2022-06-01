@@ -1,6 +1,7 @@
 import logging
 
 from etl import state
+from utils.backoff import backoff
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +102,7 @@ class DataExtractor:
         ]
         return pattern, columns
 
+    @backoff(logger=logger)
     def get_fw_ids_persons_changed(self):
         persons_query = f'''
             SELECT id 
@@ -124,6 +126,7 @@ class DataExtractor:
 
         return {str(fw[0]) for fw in self.cursor.fetchall()}
 
+    @backoff(logger=logger)
     def get_fw_ids_genres_changed(self):
         genres_query = f'''
             SELECT id
@@ -149,6 +152,7 @@ class DataExtractor:
 
         return {str(fw[0]) for fw in self.cursor.fetchall()}
 
+    @backoff(logger=logger)
     def get_film_work_changed(self):
         fw_query = f'''
             SELECT id 
@@ -159,15 +163,3 @@ class DataExtractor:
         self.cursor.execute(fw_query)
 
         return {str(fw[0]) for fw in self.cursor.fetchall()}
-
-
-def connect_elasticsearch():
-    _es = None
-    # _es = Elasticsearch('http://elasticsearch:9200')
-    if _es.ping():
-        print('Yay Connect')
-    else:
-        print('Awww it could not connect!')
-    return _es
-
-    # assert not check_conn(pg_conn)
