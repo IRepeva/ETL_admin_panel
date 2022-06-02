@@ -1,0 +1,131 @@
+version: '3'
+services:
+  app:
+    container_name: app
+    user: "${UID}:${GID}"
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    env_file:
+      - app/config/.env
+    volumes:
+      - static:/app/static
+      - ./deploy/postgres/fill_db:/deploy/postgres/fill_db
+    depends_on:
+      - postgres
+      - elasticsearch
+      - redis
+
+  nginx:
+    container_name: nginx
+    image: nginx:1.21.6-alpine
+    ports:
+      - '80:80'
+    volumes:
+      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./deploy/nginx/conf.d:/etc/nginx/conf.d:ro
+      - static:/app/static
+    restart: always
+    depends_on:
+      - app
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -so /dev/null http://localhost/ || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    container_name: db
+    image: postgres:14.3
+    ports:
+      - '5234:5234'
+    env_file:
+      - app/config/.env
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./deploy/postgres/db_schema_init.sql:/docker-entrypoint-initdb.d/02.init_db.sql
+      - db_data:/var/lib/postgresql/data/
+    restart: always
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${DB_USER} -d $${DB_NAME}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    container_name: redis
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes:
+      - cache:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  celery:
+    container_name: celery
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    command: celery -A celery_app.app worker -l info
+    depends_on:
+      - redis
+    healthcheck:
+      test: ['CMD-SHELL', 'celery -b "redis://redis:6379" inspect ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  celery-beat:
+    container_name: celery-beat
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    command: celery -A celery_app.app beat -l info
+    depends_on:
+      - redis
+    healthcheck:
+      test: [ 'CMD-SHELL', 'celery -b "redis://redis:6379" inspect ping' ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    container_name: elasticsearch
+    image: elasticsearch:7.17.4
+    ports:
+      - '9200:9200'
+    environment:
+      discovery.type: single-node
+    volumes:
+      - es_data:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'curl localhost:9200/_cluster/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  swagger:
+    container_name: swagger
+    image: swaggerapi/swagger-ui
+    ports:
+      - '8080:8080'
+    volumes:
+      - ${PWD}/app/swagger/openapi.yaml:/swagger.yaml:ro
+    environment:
+      SWAGGER_JSON: /swagger.yaml
+      BASE_URL: /swagger
+
+
+volumes:
+  db_data:
+  cache:
+  es_data:
+  static:
