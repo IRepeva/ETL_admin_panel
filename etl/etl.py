@@ -44,9 +44,3 @@ def transfer_data():
                     state.get_state(DataExtractor.CURRENT_TIME_KEY))
 
     logger.info(f'All data was successfully transferred to elasticsearch')
-
-
-if __name__ == '__main__':
-    with closing(psycopg2.connect(**DSL, cursor_factory=DictCursor)) as pg_conn:
-        psycopg2.extras.register_uuid()
-        transfer_data(pg_conn)
