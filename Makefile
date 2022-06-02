@@ -1,4 +1,4 @@
-docker_app = docker-compose -f docker-compose.yml exec app
+docker_app = docker-compose exec app
 manage =  python manage.py
 
 make_migrations:

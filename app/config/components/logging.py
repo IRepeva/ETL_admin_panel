@@ -18,11 +18,11 @@ LOGGING_CONF = {
         },
     },
     'handlers': {
-        "fileHandler": {
-            "class": "logging.FileHandler",
-            "formatter": "short",
-            "filename": "admin_panel.log"
-        },
+    #     "fileHandler": {
+    #         "class": "logging.FileHandler",
+    #         "formatter": "short",
+    #         "filename": "admin_panel.log"
+    #     },
         'debug-console': {
             'class': 'logging.StreamHandler',
             'formatter': 'default',
@@ -35,11 +35,11 @@ LOGGING_CONF = {
             'handlers': ['debug-console'],
             'propagate': False,
         },
-        'file_logger': {
-            'handlers': ['fileHandler'],
-            'level': 'DEBUG',
-            'propagate': True
-        },
+        # 'file_logger': {
+        #     'handlers': ['fileHandler'],
+        #     'level': 'DEBUG',
+        #     'propagate': True
+        # },
         'django.db.backends': {
             'level': 'DEBUG',
             'handlers': ['debug-console'],

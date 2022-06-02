@@ -2,6 +2,7 @@ version: '3'
 services:
   app:
     container_name: app
+    user: "${UID}:${GID}"
     build:
       context: .
       dockerfile: app/Dockerfile

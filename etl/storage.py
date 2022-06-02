@@ -5,8 +5,6 @@ from typing import Any, Optional
 
 import redis
 
-# redis_cache = redis.Redis(host='redis', decode_responses=True)
-
 
 class BaseStorage:
     @abc.abstractmethod

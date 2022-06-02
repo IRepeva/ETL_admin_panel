@@ -6,7 +6,7 @@
 **/Dockerfile
 README.md
 docker-compose.yml
-admin_panel.log
+**/admin_panel.log
 **/venv
 **/static
 **/swagger
