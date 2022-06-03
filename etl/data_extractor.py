@@ -13,18 +13,19 @@ class DataExtractor:
     def __init__(self, connection):
         self.current_time = state.get_state(self.CURRENT_TIME_KEY)
         self.last_extracted_time = self.get_last_extracted_time()
-        self.connection = connection
-        self.cursor = self.connection.cursor()
+        self.cursor = connection.cursor()
         self.bunch_size = 5000
 
-    def get_last_extracted_time(self):
+    def get_last_extracted_time(self) -> str:
         extracted_time = state.get_state(self.LAST_EXTRACTED_KEY)
         return extracted_time if extracted_time else '0001-01-01 00:00:00.000'
 
     def extract(self):
         fw_ids_persons_changed = self.get_fw_ids_persons_changed()
         fw_ids_genres_changed = self.get_fw_ids_genres_changed()
-        film_work_changed = self.get_film_work_changed()
+        film_work_changed = set()
+        for film_work_bunch in self.get_film_work_changed():
+            film_work_changed.update(film_work_bunch)
 
         all_changed_fw_ids = (
                 fw_ids_persons_changed |
@@ -39,12 +40,10 @@ class DataExtractor:
             pattern, columns = self.get_fw_query_pattern(str_fw_ids)
             self.cursor.execute(pattern)
 
-            data = self.cursor.fetchmany(self.bunch_size)
-            while data:
+            while data := self.cursor.fetchmany(self.bunch_size):
                 yield data, columns
-                data = self.cursor.fetchmany(self.bunch_size)
 
-    def get_fw_query_pattern(self, str_fw_ids):
+    def get_fw_query_pattern(self, str_fw_ids: str):
         pattern = f'''
             SELECT
                 fw.id,
@@ -103,7 +102,7 @@ class DataExtractor:
         return pattern, columns
 
     @backoff(logger=logger)
-    def get_fw_ids_persons_changed(self):
+    def get_fw_ids_persons_changed(self) -> set:
         persons_query = f'''
             SELECT id 
             FROM content.person
@@ -127,7 +126,7 @@ class DataExtractor:
         return {str(fw[0]) for fw in self.cursor.fetchall()}
 
     @backoff(logger=logger)
-    def get_fw_ids_genres_changed(self):
+    def get_fw_ids_genres_changed(self) -> set:
         genres_query = f'''
             SELECT id
             FROM content.genre
@@ -162,4 +161,5 @@ class DataExtractor:
         '''
         self.cursor.execute(fw_query)
 
-        return {str(fw[0]) for fw in self.cursor.fetchall()}
+        while data := self.cursor.fetchmany(self.bunch_size):
+            yield {str(fw[0]) for fw in data}

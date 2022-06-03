@@ -106,7 +106,7 @@ services:
     environment:
       discovery.type: single-node
     volumes:
-      - es_data:/data
+      - es_data:/usr/share/elasticsearch/data
     healthcheck:
       test: ['CMD-SHELL', 'curl localhost:9200/_cluster/health']
       interval: 10s
