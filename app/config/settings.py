@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
+from pydantic import BaseSettings, RedisDsn, PostgresDsn
 from split_settings.tools import include
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -39,6 +40,21 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,
 }
+
+
+class Settings(BaseSettings):
+
+    DB_DSN: PostgresDsn = 'postgres://irepeva:2404IRepeva@127.0.0.1:5432/movies_database'
+    REDIS_DSN: RedisDsn = 'redis://127.0.0.1:6379'
+
+    ES_DSN: str = 'http://127.0.0.1:9200'
+
+    class Config:
+        env_file = ".env"
+
+
+settings = Settings()
+
 
 if DEBUG:
     import os  # only if you haven't already imported this

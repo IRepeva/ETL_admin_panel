@@ -1,4 +1,3 @@
-import os
 from contextlib import closing
 from datetime import datetime
 
@@ -14,20 +13,15 @@ logger = get_task_logger(__name__)
 redis_cache = RedisStorage('redis')
 state = State(redis_cache)
 
-DSL = {
-    'dbname': os.environ.get('DB_NAME'),
-    'user': os.environ.get('DB_USER'),
-    'password': os.environ.get('DB_PASSWORD'),
-    'host': os.environ.get('DB_HOST', '127.0.0.1'),
-    'port': os.environ.get('DB_PORT', 5432)
-}
-
 
 @celery_app.task()
 def transfer_data():
     from data_extractor import DataExtractor
+    from config.settings import settings
 
-    with closing(psycopg2.connect(**DSL, cursor_factory=DictCursor)) as pg_conn:
+    with closing(
+            psycopg2.connect(settings.DB_DSN, cursor_factory=DictCursor)
+    ) as pg_conn:
         psycopg2.extras.register_uuid()
 
         state.set_state(DataExtractor.CURRENT_TIME_KEY,

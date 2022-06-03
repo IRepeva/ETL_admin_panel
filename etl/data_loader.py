@@ -1,5 +1,6 @@
 import logging
 import sys
+from typing import List, Dict, Optional
 
 from elasticsearch import helpers, Elasticsearch
 
@@ -122,10 +123,12 @@ class ESLoader:
     default_mappings = MOVIES_MAPPING
 
     def __init__(self):
-        self.es = Elasticsearch('http://elasticsearch:9200')
+        from config.settings import settings
+
+        self.es = Elasticsearch(settings.ES_DSN)
 
     @backoff(logger=logger)
-    def load(self, data, index_name=default_index_name):
+    def load(self, data: List[Dict], index_name: str = default_index_name):
         data = self.prepare_for_update(data)
         if not self.es.indices.exists(index=index_name):
             logger.info(
@@ -138,8 +141,9 @@ class ESLoader:
         )
 
     @backoff(logger=logger)
-    def create_index(self, index_name=default_index_name, settings=None,
-                     mappings=None):
+    def create_index(self, index_name: str = default_index_name,
+                     settings: Optional[Dict] = None,
+                     mappings: Optional[Dict] = None):
         if mappings is None:
             mappings = self.default_mappings
         if settings is None:
@@ -152,7 +156,7 @@ class ESLoader:
                                })
         logger.info(f'Index "{index_name}" was created')
 
-    def prepare_for_update(self, data):
+    def prepare_for_update(self, data: List[Dict]) -> List[Dict]:
         prepared_data = [
             {
                 "_op_type": 'update',
@@ -164,5 +168,5 @@ class ESLoader:
         return prepared_data
 
     @backoff(logger=logger)
-    def search(self, search, index_name=default_index_name, **kwargs):
-        return self.es.search(index=index_name, body=search, **kwargs)
+    def search(self, search: Dict, index: str = default_index_name, **kwargs):
+        return self.es.search(index=index, body=search, **kwargs)
