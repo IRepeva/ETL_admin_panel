@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from etl import state
 from utils.backoff import backoff
@@ -18,7 +19,7 @@ class DataExtractor:
 
     def get_last_extracted_time(self) -> str:
         extracted_time = state.get_state(self.LAST_EXTRACTED_KEY)
-        return extracted_time if extracted_time else '0001-01-01 00:00:00.000'
+        return extracted_time if extracted_time else datetime.min.isoformat()
 
     def extract(self):
         fw_ids_persons_changed = self.get_fw_ids_persons_changed()
